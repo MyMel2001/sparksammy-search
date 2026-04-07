@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sparkSammy Images</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        :root {
+            --bg: #0f0f12;
+            --text: #e0e0e0;
+            --accent: #00d4ff;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .logo {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 60px;
+            background: linear-gradient(90deg, #00d4ff, #00ff9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .search-container {
+            width: 100%;
+            max-width: 680px;
+        }
+        
+        form {
+            position: relative;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 20px 28px;
+            padding-right: 70px;
+            font-size: 20px;
+            border: 2px solid #222;
+            border-radius: 9999px;
+            background: #1a1a1f;
+            color: var(--text);
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2);
+        }
+        
+        button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            color: #000;
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 9999px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        .nav {
+            margin-top: 40px;
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+        }
+        
+        .nav a {
+            color: #888;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 24px;
+            border-radius: 9999px;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #222;
+            color: var(--text);
+        }
+        
+        .footer {
+            margin-top: auto;
+            padding-top: 60px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            max-width: 680px;
+        }
+        
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">sparkSammy Search</div>
+    
+    <div class="search-container">
+        <form action="/images/search/" method="get">
+            <input type="text" name="q" placeholder="Search images privately..." autocomplete="off" autofocus required>
+            <button type="submit">🖼️</button>
+        </form>
+    </div>
+    
+    <div class="nav">
+        <a href="/">🌐 Web Search</a>
+    </div>
+    
+    <div class="footer">
+        Privacy-first meta image search • Powered by DuckDuckGo + StartPage scraping • 
+        No tracking • No ads • No logs • 
+        <a href="/">Back to web search</a>
+    </div>
+</body>
+</html>
