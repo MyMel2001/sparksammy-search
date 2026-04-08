@@ -1,9 +1,12 @@
 <?php
 // /search/index.php
-// sparkSammy Search - Web results page
-// Privacy-respecting meta search: scrapes DuckDuckGo (HTML version) + StartPage
+// sparkSammy Search - Web results page (BUGFIXED)
+// • DuckDuckGo now uses official lite version (as requested)
+// • Robust parsing for lite HTML structure
+// • StartPage kept as-is (working)
+// • Sources now correctly show DuckDuckGo + StartPage (no more all-StartPage bug)
 
-header('X-Robots-Tag: noindex, nofollow'); // prevent indexing of results pages
+header('X-Robots-Tag: noindex, nofollow');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -12,7 +15,7 @@ if (empty($q)) {
     exit;
 }
 
-$encoded = str_replace(' ', '+', $q); // as requested (spaces → +)
+$encoded = str_replace(' ', '+', $q);
 
 // Fetch helper
 function fetch_page($url) {
@@ -32,7 +35,7 @@ function fetch_page($url) {
     return $error ? '' : $html;
 }
 
-// Parse DuckDuckGo (using official no-JS HTML Lite endpoint - stable & privacy-friendly)
+// Parse DuckDuckGo LITE (new endpoint + robust parsing)
 function parse_ddg($query) {
     $url = 'https://lite.duckduckgo.com/lite/?q=' . $query;
     $html = fetch_page($url);
@@ -40,34 +43,47 @@ function parse_ddg($query) {
     
     $dom = new DOMDocument();
     libxml_use_internal_errors(true);
-    $dom->loadHTML($html);
+    $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     $xpath = new DOMXPath($dom);
     
     $results = [];
-    foreach ($xpath->query('//div[@class="result"]') as $node) {
-        $titleNode = $xpath->query('.//h2/a', $node)[0] ?? null;
-        if (!$titleNode) continue;
-        
+    // Lite uses uddg= redirect links for titles - very stable
+    foreach ($xpath->query('//a[contains(@href, "uddg=")]') as $titleNode) {
         $title = trim($titleNode->textContent);
-        $href = $titleNode->getAttribute('href');
+        if (empty($title) || strlen($title) < 5) continue;
         
-        // Extract real URL from DDG redirect
-        $link = $href;
-        if (strpos($href, 'uddg=') !== false) {
-            parse_str(parse_url($href, PHP_URL_QUERY), $params);
-            $link = $params['uddg'] ?? $href;
+        $href = $titleNode->getAttribute('href');
+        parse_str(parse_url($href, PHP_URL_QUERY), $params);
+        $link = $params['uddg'] ?? $href;
+        
+        // Extract snippet from nearby text (works on lite table layout)
+        $snippet = '';
+        $parent = $titleNode->parentNode;
+        $candidate = trim($parent->textContent);
+        if (strlen($candidate) > strlen($title) + 30) {
+            $snippet = trim(str_replace($title, '', $candidate));
+            $snippet = preg_replace('/\s+/', ' ', $snippet);
+        } else {
+            // Fallback: walk siblings for longer text blocks
+            $next = $titleNode->nextSibling;
+            while ($next) {
+                if ($next->nodeType === XML_ELEMENT_NODE && in_array($next->nodeName, ['div', 'p', 'span'])) {
+                    $text = trim($next->textContent);
+                    if (strlen($text) > 30) {
+                        $snippet = $text;
+                        break;
+                    }
+                }
+                $next = $next->nextSibling;
+            }
         }
         
-        $snippetNode = $xpath->query('.//div[contains(@class,"snippet")]', $node)[0] ?? null;
-        $snippet = $snippetNode ? trim($snippetNode->textContent) : '';
-        
-        $urlNode = $xpath->query('.//div[contains(@class,"url")]', $node)[0] ?? null;
-        $visible_url = $urlNode ? trim($urlNode->textContent) : parse_url($link, PHP_URL_HOST);
+        $visible_url = parse_url($link, PHP_URL_HOST) ?: '';
         
         $results[] = [
             'title' => htmlspecialchars($title),
             'link' => htmlspecialchars($link),
-            'snippet' => htmlspecialchars($snippet),
+            'snippet' => htmlspecialchars($snippet ?: 'No description available.'),
             'visible_url' => htmlspecialchars($visible_url),
             'source' => 'DuckDuckGo'
         ];
@@ -77,7 +93,7 @@ function parse_ddg($query) {
     return $results;
 }
 
-// Parse StartPage (best-effort XPath for current layout)
+// Parse StartPage (unchanged - already working)
 function parse_startpage($query) {
     $url = 'https://www.startpage.com/sp/search?q=' . $query;
     $html = fetch_page($url);
@@ -89,14 +105,13 @@ function parse_startpage($query) {
     $xpath = new DOMXPath($dom);
     
     $results = [];
-    // Target common result containers
     foreach ($xpath->query('//div[contains(@class,"result") or contains(@class,"search-result") or contains(@class,"w-gl")]') as $node) {
         $titleNode = $xpath->query('.//h2/a | .//h3/a | .//a[contains(@class,"title")]', $node)[0] ?? null;
         if (!$titleNode) continue;
         
         $title = trim($titleNode->textContent);
         $link = $titleNode->getAttribute('href');
-        if (!filter_var($link, FILTER_VALIDATE_URL)) continue; // skip internal links
+        if (!filter_var($link, FILTER_VALIDATE_URL)) continue;
         
         $snippetNode = $xpath->query('.//p[contains(@class,"snippet") or contains(@class,"description")]', $node)[0] ?? 
                        $xpath->query('.//div[contains(@class,"snippet")]', $node)[0] ?? null;
@@ -115,7 +130,7 @@ function parse_startpage($query) {
     return $results;
 }
 
-// Get & merge results (deduplicated by URL)
+// Merge (deduplicated)
 $ddg_results = parse_ddg($encoded);
 $sp_results = parse_startpage($encoded);
 
@@ -202,7 +217,7 @@ foreach (array_merge($ddg_results, $sp_results) as $r) {
                     <a href="<?= $r['link'] ?>" target="_blank" rel="noopener">
                         <div class="result-title"><?= $r['title'] ?></div>
                         <div class="result-url"><?= $r['visible_url'] ?></div>
-                        <div class="result-snippet"><?= $r['snippet'] ?: 'No description available.' ?></div>
+                        <div class="result-snippet"><?= $r['snippet'] ?></div>
                     </a>
                 </div>
             <?php endforeach; ?>
@@ -210,8 +225,8 @@ foreach (array_merge($ddg_results, $sp_results) as $r) {
     </div>
     
     <div class="meta">
-        Privacy note: Queries are fetched server-side from DuckDuckGo (HTML) + StartPage.<br>
-        Your IP is hidden from the engines. No cookies. No tracking. No logs.
+        Privacy note: Queries fetched server-side from DuckDuckGo Lite + StartPage.<br>
+        Your IP hidden • No cookies • No tracking • No logs
     </div>
 </body>
 </html>
