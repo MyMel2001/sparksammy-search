@@ -249,8 +249,21 @@ $pagedResults = array_slice($engine->results, ($page - 1) * $perPage, $perPage, 
                 <div class="columns-2 md:columns-4 lg:columns-5 gap-4">
                     <?php foreach ($pagedResults as $url => $data): ?>
                         <?php foreach ($data['images'] as $img): ?>
-                            <div class="mb-4 break-inside-avoid">
-                                <img src="<?= htmlspecialchars($img['src']) ?>" class="rounded-lg shadow w-full hover:scale-[1.02] transition" onerror="this.parentElement.remove()">
+                            <div class="mb-4 break-inside-avoid group">
+                                <a href="<?= htmlspecialchars($img['source']) ?>" 
+                                   target="_blank" 
+                                   title="Source: <?= htmlspecialchars($img['source']) ?>"
+                                   class="block overflow-hidden rounded-lg shadow hover:shadow-xl transition-all">
+                                    
+                                    <img src="<?= htmlspecialchars($img['src']) ?>" 
+                                         alt="<?= htmlspecialchars($img['caption']) ?>"
+                                         class="w-full h-auto group-hover:scale-105 transition-transform duration-300" 
+                                         onerror="this.closest('.break-inside-avoid').remove()">
+                                         
+                                    <div class="hidden group-hover:block absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+                                        View Source
+                                    </div>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
