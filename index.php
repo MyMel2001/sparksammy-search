@@ -19,7 +19,7 @@ class RelaySearch {
         "nih.gov", "nasa.gov", "who.int", "usa.gov", "cdc.gov", "nist.gov",
         "data.gov", "gutenberg.org", "archive.org", "openculture.com",
         "news.ycombinator.com", "stackoverflow.com", "github.com",
-        "piapro.net"
+        "piapro.net", "deviantart.com", "crypton.co.jp"
     ];
 
     private function fetch($url) {
