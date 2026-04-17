@@ -258,7 +258,8 @@ $pagedResults = array_slice($engine->results, ($page - 1) * $perPage, $perPage, 
                                     <img src="<?= htmlspecialchars($img['src']) ?>" 
                                          alt="<?= htmlspecialchars($img['caption']) ?>"
                                          class="w-full h-auto group-hover:scale-105 transition-transform duration-300" 
-                                         onerror="this.closest('.break-inside-avoid').remove()">
+                                         onerror="this.closest('.break-inside-avoid').remove()"
+                                         loading="lazy">
                                          
                                     <div class="hidden group-hover:block absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
                                         View Source
