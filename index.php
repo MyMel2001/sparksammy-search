@@ -217,31 +217,34 @@ $pagedResults = array_slice($engine->results, ($page - 1) * $perPage, $perPage, 
     <title>sparkSammy Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 p-6">
+<body class="p-8 bg-slate-950 text-slate-100">
     <div class="max-w-6xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-black text-slate-800">sparkSammy <span class="text-blue-600">Search</span></h1>
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black tracking-tight">sparkSammy <span class="text-blue-500">Search</span></h1>
         </header>
 
-        <form method="GET" class="bg-white p-2 rounded-full shadow-lg flex gap-2 mb-10 border">
-            <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="flex-grow pl-6 outline-none" placeholder="Search the relay...">
-            <input type="hidden" name="page" value="1">
-            <select name="type" class="bg-slate-50 px-4 rounded-full text-sm">
+        <form method="GET" class="flex gap-4 mb-12 bg-slate-900 p-3 rounded-2xl border border-slate-800 focus-within:border-blue-500/50 transition-colors shadow-2xl">
+            <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" 
+                   class="flex-grow bg-transparent outline-none px-4 text-slate-100 placeholder-slate-500" 
+                   placeholder="Search the relay...">
+            <select name="type" class="bg-slate-800 text-slate-200 rounded-xl px-3 text-sm font-medium outline-none cursor-pointer hover:bg-slate-700 transition">
                 <option value="web" <?= $type=='web'?'selected':'' ?>>Web</option>
                 <option value="images" <?= $type=='images'?'selected':'' ?>>Images</option>
             </select>
-            <button class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold">FIND</button>
+            <button class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                Search
+            </button>
         </form>
 
-        <?php if (!empty($pagedResults)): ?>
-            <?php if ($type == 'web'): ?>
-                <div class="grid gap-6">
+        <?php if ($pagedResults): ?>
+            <?php if ($type === 'web'): ?>
+                <div class="space-y-4">
                     <?php foreach ($pagedResults as $url => $data): ?>
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                            <a href="<?= $url ?>" class="text-blue-700 font-bold text-xl hover:underline" target="_blank">
+                        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors group">
+                            <a href="<?= $url ?>" target="_blank" class="text-blue-400 text-xl font-bold group-hover:text-blue-300 transition-colors">
                                 <?= htmlspecialchars($data['title']) ?>
                             </a>
-                            <div class="text-green-700 text-xs truncate mb-2"><?= $url ?></div>
+                            <p class="text-slate-500 text-sm truncate mt-1 font-mono"><?= $url ?></p>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -249,20 +252,16 @@ $pagedResults = array_slice($engine->results, ($page - 1) * $perPage, $perPage, 
                 <div class="columns-2 md:columns-4 lg:columns-5 gap-4">
                     <?php foreach ($pagedResults as $url => $data): ?>
                         <?php foreach ($data['images'] as $img): ?>
-                            <div class="mb-4 break-inside-avoid group">
-                                <a href="<?= htmlspecialchars($img['source']) ?>" 
-                                   target="_blank" 
-                                   title="Source: <?= htmlspecialchars($img['source']) ?>"
-                                   class="block overflow-hidden rounded-lg shadow hover:shadow-xl transition-all">
-                                    
+                            <div class="mb-4 break-inside-avoid relative group">
+                                <a href="<?= htmlspecialchars($img['source']) ?>" target="_blank" 
+                                   class="block rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 shadow-xl transition-transform hover:border-slate-600">
                                     <img src="<?= htmlspecialchars($img['src']) ?>" 
                                          alt="<?= htmlspecialchars($img['caption']) ?>"
-                                         class="w-full h-auto group-hover:scale-105 transition-transform duration-300" 
-                                         onerror="this.closest('.break-inside-avoid').remove()"
-                                         loading="lazy">
-                                         
-                                    <div class="hidden group-hover:block absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                                        View Source
+                                         class="w-full h-auto group-hover:scale-110 transition duration-700" 
+                                         onerror="this.parentElement.remove()">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-3">
+                                        <span class="text-[10px] font-black tracking-widest text-blue-400 uppercase">View Source</span>
                                     </div>
                                 </a>
                             </div>
@@ -270,17 +269,11 @@ $pagedResults = array_slice($engine->results, ($page - 1) * $perPage, $perPage, 
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-
-            <div class="mt-12 flex justify-center items-center gap-6">
-                <?php if ($page > 1): ?>
-                    <a href="?q=<?= urlencode($q) ?>&type=<?= $type ?>&page=<?= $page - 1 ?>" class="text-blue-600 font-bold">&larr; Back</a>
-                <?php endif; ?>
-                <span class="bg-slate-200 px-4 py-1 rounded-full text-sm font-bold">Page <?= $page ?></span>
-                <?php if ($totalResults > ($page * $perPage)): ?>
-                    <a href="?q=<?= urlencode($q) ?>&type=<?= $type ?>&page=<?= $page + 1 ?>" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold">Next &rarr;</a>
-                <?php endif; ?>
+        <?php else: ?>
+            <div class="text-center py-20 bg-slate-900/20 rounded-3xl border-2 border-dashed border-slate-800">
+                <p class="text-slate-500 font-medium">No results found in the relay.</p>
+                <p class="text-slate-600 text-sm">Try a broader query.</p>
             </div>
         <?php endif; ?>
     </div>
 </body>
-</html>
